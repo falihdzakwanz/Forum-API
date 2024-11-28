@@ -19,6 +19,9 @@ describe('delete reply use case', () => {
     mockCommentRepository.verifyAvailableComment = jest.fn()
       .mockImplementation(() => Promise.resolve());
 
+    mockReplyRepository.verifyAvailableReply = jest.fn()
+      .mockImplementation(() => Promise.resolve());
+
     mockReplyRepository.verifyReplyOwner = jest.fn()
       .mockImplementation(() => Promise.resolve());
 

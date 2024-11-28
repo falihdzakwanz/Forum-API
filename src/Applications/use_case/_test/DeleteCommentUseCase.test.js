@@ -18,6 +18,9 @@ describe('DeleteCommentUseCase', () => {
     mockThreadRepository.verifyAvailableThread = jest.fn()
       .mockImplementation(() => Promise.resolve());
 
+    mockCommentRepository.verifyAvailableComment = jest.fn()
+      .mockImplementation(() => Promise.resolve());
+
     mockCommentRepository.verifyCommentOwner = jest.fn()
       .mockImplementation(() => Promise.resolve());
 
@@ -84,7 +87,7 @@ describe('DeleteCommentUseCase', () => {
     mockThreadRepository.verifyAvailableThread = jest.fn()
       .mockImplementation(() => Promise.resolve());
 
-    mockCommentRepository.verifyCommentOwner = jest.fn()
+    mockCommentRepository.verifyAvailableComment = jest.fn()
       .mockImplementation(() => Promise.reject(new Error('Comment not found')));
 
     const deleteCommentUseCase = new DeleteCommentUseCase({

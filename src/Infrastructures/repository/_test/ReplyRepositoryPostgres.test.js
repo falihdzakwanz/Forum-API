@@ -164,17 +164,21 @@ describe('ReplyRepositoryPostgres', () => {
       });
 
       const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
-
       await expect(replyRepositoryPostgres.verifyReplyOwner(replyId, notOwnerId)).rejects.toThrowError(AuthorizationError);
     });
 
     it('should throw NotFoundError when reply is not found', async () => {
-      const notOwnerId = 'user-110';
-      const replyId = 'reply-950';
+      const ownerId = 'user-999';
+      await UsersTableTestHelper.addUser({ id: ownerId, username: 'jacob' });
+
+      const threadId = 'thread-999';
+
+      const commentId = 'comment-999';
+
+      const replyId = 'reply-999';
 
       const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
-
-      await expect(replyRepositoryPostgres.verifyReplyOwner(replyId, notOwnerId)).rejects.toThrowError(NotFoundError);
+      await expect(replyRepositoryPostgres.verifyAvailableReply(threadId, commentId, replyId)).rejects.toThrowError(NotFoundError);
     });
 
     it('should not throw AuthorizationError when user is the comment\'s owner', async () => {
@@ -245,7 +249,7 @@ describe('ReplyRepositoryPostgres', () => {
     it('should throw NotFoundError when the reply is not found', async () => {
       const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
 
-      return expect(replyRepositoryPostgres.deleteReplyById('reply-caur'))
+      return expect(replyRepositoryPostgres.verifyAvailableReply('thread-123', 'comment-123', 'reply-caur'))
         .rejects
         .toThrowError(NotFoundError);
     });
@@ -305,7 +309,7 @@ describe('ReplyRepositoryPostgres', () => {
         comment: comment.id,
         owner: commentator2.id,
         username: commentator2.username,
-        content: '**balasan telah dihapus**',
+        content: 'balasan 2',
         created_at: '2021-08-08T08:45:33.555Z',
         is_deleted: true,
       };

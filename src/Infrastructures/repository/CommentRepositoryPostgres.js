@@ -45,10 +45,6 @@ class CommentRepositoryPostgres extends CommentRepository {
 
     const result = await this._pool.query(query);
 
-    if (!result.rowCount) {
-      throw new NotFoundError('Comment not found');
-    }
-
     if (result.rows[0].owner !== ownerId) {
       throw new AuthorizationError('User is not authorized to access this comment');
     }
@@ -60,11 +56,7 @@ class CommentRepositoryPostgres extends CommentRepository {
       values: [commentId, threadId],
     };
 
-    const result = await this._pool.query(query);
-
-    if (!result.rowCount) {
-      throw new NotFoundError('Comment not found');
-    }
+    await this._pool.query(query);
   }
 
   async getCommentsByThreadId(threadId) {
@@ -87,7 +79,7 @@ class CommentRepositoryPostgres extends CommentRepository {
     return result.rows.map((comment) => ({
       id: comment.id,
       username: comment.username,
-      content: comment.is_deleted ? '**komentar telah dihapus**' : comment.content,
+      content: comment.content,
       date: comment.date,
       is_deleted: comment.is_deleted,
     }));

@@ -11,16 +11,11 @@ describe('AddThreadUseCase', () => {
     const useCaseAuth = {
       id: 'user-123',
     };
-    const expectedThread = new AddThread({
-      owner: 'user-123',
-      title: useCasePayload.title,
-      body: useCasePayload.body,
-    });
 
     const mockThreadRepository = new ThreadRepository();
 
     mockThreadRepository.addThread = jest.fn()
-      .mockImplementation(() => Promise.resolve(expectedThread));
+      .mockImplementation((thread) => Promise.resolve(new AddThread(thread)));
 
     const addThreadUseCase = new AddThreadUseCase({
       threadRepository: mockThreadRepository,
@@ -28,11 +23,15 @@ describe('AddThreadUseCase', () => {
 
     const thread = await addThreadUseCase.execute(useCasePayload, useCaseAuth);
 
-    expect(mockThreadRepository.addThread).toBeCalledWith(new AddThread({
+    expect(mockThreadRepository.addThread).toBeCalledWith(expect.objectContaining({
       owner: useCaseAuth.id,
       title: useCasePayload.title,
       body: useCasePayload.body,
     }));
-    expect(thread).toStrictEqual(expectedThread);
+    expect(thread).toMatchObject({
+      owner: useCaseAuth.id,
+      title: useCasePayload.title,
+      body: useCasePayload.body,
+    });
   });
 });

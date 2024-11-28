@@ -19,6 +19,8 @@ class GetThreadDetailUseCase {
     }
     const { threadId } = useCaseParam;
 
+    await this._threadRepository.verifyAvailableThread(threadId);
+
     const {
       id, username, title, body, date,
     } = await this._threadRepository.getThreadById(threadId);
@@ -34,7 +36,7 @@ class GetThreadDetailUseCase {
         id: reply.id,
         username: reply.username,
         date: reply.date,
-        content: reply.content,
+        content: reply.is_deleted ? '**balasan telah dihapus**' : reply.content,
       }));
     });
 
@@ -54,11 +56,12 @@ class GetThreadDetailUseCase {
       username: commentatorUsername,
       date,
       content,
+      is_deleted,
     }) => new CommentDetail({
       id: commentId,
       username: commentatorUsername,
       date,
-      content,
+      content: is_deleted ? '**komentar telah dihapus**' : content,
       replies: [],
     }));
   }

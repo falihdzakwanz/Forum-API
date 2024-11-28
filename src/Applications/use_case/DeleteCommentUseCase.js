@@ -8,9 +8,8 @@ class DeleteCommentUseCase {
     const { id } = useCaseAuth;
 
     await this._threadRepository.verifyAvailableThread(useCaseParam.threadId);
-
+    await this._commentRepository.verifyAvailableComment(useCaseParam.threadId, useCaseParam.commentId);
     await this._commentRepository.verifyCommentOwner(useCaseParam.commentId, id);
-
     await this._commentRepository.deleteCommentById(useCaseParam.commentId, useCaseParam.threadId);
   }
 }

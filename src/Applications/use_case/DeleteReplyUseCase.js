@@ -9,9 +9,8 @@ class DeleteReplyUseCase {
     const { threadId, commentId, replyId } = useCaseParam;
 
     await this._commentRepository.verifyAvailableComment(threadId, commentId);
-
+    await this._replyRepository.verifyAvailableReply(threadId, commentId, replyId);
     await this._replyRepository.verifyReplyOwner(replyId, ownerId);
-
     await this._replyRepository.deleteReplyById(replyId);
   }
 }

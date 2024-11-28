@@ -49,10 +49,6 @@ class ReplyRepositoryPostgres extends ReplyRepository {
 
     const result = await this._pool.query(query);
 
-    if (!result.rowCount) {
-      throw new NotFoundError('Reply not found');
-    }
-
     if (result.rows[0].owner !== ownerId) {
       throw new AuthorizationError('User is not authorized to access this reply');
     }
@@ -64,11 +60,7 @@ class ReplyRepositoryPostgres extends ReplyRepository {
       values: [replyId],
     };
 
-    const result = await this._pool.query(query);
-
-    if (!result.rowCount) {
-      throw new NotFoundError('Reply not found');
-    }
+    await this._pool.query(query);
   }
 
   async getRepliesByCommentId(commentId) {
@@ -95,7 +87,7 @@ class ReplyRepositoryPostgres extends ReplyRepository {
       id: reply.id,
       username: reply.username,
       comment: commentId,
-      content: reply.is_deleted ? '**balasan telah dihapus**' : reply.content,
+      content: reply.content,
       date: reply.date,
       is_deleted: reply.is_deleted,
     }));

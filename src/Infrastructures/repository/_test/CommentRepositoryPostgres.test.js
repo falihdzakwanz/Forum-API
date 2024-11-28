@@ -154,12 +154,14 @@ describe('CommentRepositoryPostgres', () => {
     });
 
     it('should throw NotFoundError when comment is not found', async () => {
-      const notOwnerId = 'user-110';
-      const commentId = 'comment-9091';
+      const ownerId = 'user-921';
+
+      const threadId = 'thread-931';
+
+      const commentId = 'comment-941';
 
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
-
-      await expect(commentRepositoryPostgres.verifyCommentOwner(commentId, notOwnerId)).rejects.toThrowError(NotFoundError);
+      await expect(commentRepositoryPostgres.verifyAvailableComment(threadId, commentId)).rejects.toThrowError(NotFoundError);
     });
 
     it('should not throw AuthorizationError when user is the comment\'s owner', async () => {
@@ -214,9 +216,20 @@ describe('CommentRepositoryPostgres', () => {
     });
 
     it('should throw NotFoundError when the comment is not found', async () => {
+      const ownerId = 'user-921';
+      await UsersTableTestHelper.addUser({ id: ownerId, username: 'jacob' });
+
+      const threadId = 'thread-910';
+      await ThreadsTableTestHelper.addThread({
+        id: threadId,
+        owner: ownerId,
+        title: 'Conner',
+        body: 'Conner body',
+      });
+
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
-      return expect(commentRepositoryPostgres.deleteCommentById('comments-09909090', 'thread-09090909')).rejects.toThrowError(NotFoundError);
+      return expect(commentRepositoryPostgres.verifyAvailableComment('thread-09090909', 'comments-09909090')).rejects.toThrowError(NotFoundError);
     });
   });
 
@@ -259,7 +272,7 @@ describe('CommentRepositoryPostgres', () => {
         id: 'comment-7472',
         thread: threadId,
         owner: commentator2.id,
-        content: '**komentar telah dihapus**',
+        content: 'wick is comment',
         created_at: '2021-08-08T08:45:33.555Z',
         is_deleted: true,
       };
