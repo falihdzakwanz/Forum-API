@@ -1,6 +1,7 @@
 const DeleteCommentUseCase = require('../DeleteCommentUseCase');
 const CommentRepository = require('../../../Domains/comments/CommentRepository');
 const ThreadRepository = require('../../../Domains/threads/ThreadRepository');
+const NotFoundError = require('../../../Commons/exceptions/NotFoundError');
 
 describe('DeleteCommentUseCase', () => {
   it('should orchestrating the delete comment action correctly', async () => {
@@ -37,6 +38,9 @@ describe('DeleteCommentUseCase', () => {
     expect(mockThreadRepository.verifyAvailableThread)
       .toBeCalledWith(useCaseParam.threadId);
 
+    expect(mockCommentRepository.verifyAvailableComment)
+      .toBeCalledWith(useCaseParam.threadId, useCaseParam.commentId);
+
     expect(mockCommentRepository.verifyCommentOwner)
       .toBeCalledWith(useCaseParam.commentId, useCaseAuth.id);
 
@@ -60,7 +64,7 @@ describe('DeleteCommentUseCase', () => {
     const mockThreadRepository = new ThreadRepository();
 
     mockThreadRepository.verifyAvailableThread = jest.fn()
-      .mockImplementation(() => Promise.reject(new Error('Thread not found')));
+      .mockImplementation(() => Promise.reject(new NotFoundError('Thread not found')));
 
     const deleteCommentUseCase = new DeleteCommentUseCase({
       commentRepository: mockCommentRepository,
@@ -70,6 +74,8 @@ describe('DeleteCommentUseCase', () => {
     await expect(deleteCommentUseCase.execute(useCaseAuth, useCaseParam))
       .rejects
       .toThrowError('Thread not found');
+
+    expect(mockThreadRepository.verifyAvailableThread).toHaveBeenCalledWith(useCaseParam.threadId);
   });
 
   it('should throw error if comment not found', async () => {
@@ -88,7 +94,7 @@ describe('DeleteCommentUseCase', () => {
       .mockImplementation(() => Promise.resolve());
 
     mockCommentRepository.verifyAvailableComment = jest.fn()
-      .mockImplementation(() => Promise.reject(new Error('Comment not found')));
+      .mockImplementation(() => Promise.reject(new NotFoundError('Comment not found')));
 
     const deleteCommentUseCase = new DeleteCommentUseCase({
       commentRepository: mockCommentRepository,
@@ -98,5 +104,8 @@ describe('DeleteCommentUseCase', () => {
     await expect(deleteCommentUseCase.execute(useCaseAuth, useCaseParam))
       .rejects
       .toThrowError('Comment not found');
+
+    expect(mockThreadRepository.verifyAvailableThread).toHaveBeenCalledWith(useCaseParam.threadId);
+    expect(mockCommentRepository.verifyAvailableComment).toHaveBeenCalledWith(useCaseParam.threadId, useCaseParam.commentId);
   });
 });
