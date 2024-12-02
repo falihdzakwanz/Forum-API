@@ -25,12 +25,12 @@ class ThreadsHandler {
 
   async getThreadCommentHandler(request, h) {
     const getThreadDetailUseCase = this._container.getInstance(GetThreadDetailUseCase.name);
-    const threadDetail = await getThreadDetailUseCase.execute(request.params);
+    const thread = await getThreadDetailUseCase.execute(request.params);
 
     const response = h.response({
       status: 'success',
       data: {
-        thread: threadDetail,
+        thread,
       },
     });
     response.code(200);
