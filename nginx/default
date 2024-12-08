@@ -47,7 +47,7 @@ server {
 	# Add index.php to the list if you are using PHP
 	index index.html index.htm index.nginx-debian.html;
 
-	server_name _;
+	server_name honest-parents-talk-freely.a276.dcdg.xyz www.honest-parents-talk-freely.a276.dcdg.xyz;
 
 	location /threads {
 		proxy_pass http://localhost:5000; # your app's port
