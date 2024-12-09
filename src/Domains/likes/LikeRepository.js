@@ -1,5 +1,5 @@
 class LikeRepository {
-  async setCommentLike(userId, commentId) {
+  async toggleCommentLike(userId, commentId) {
     throw new Error('LIKE_REPOSITORY.METHOD_NOT_IMPLEMENTED');
   }
 

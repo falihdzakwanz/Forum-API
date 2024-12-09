@@ -6,6 +6,7 @@ const users = require('../../Interfaces/http/api/users');
 const threads = require('../../Interfaces/http/api/threads');
 const comments = require('../../Interfaces/http/api/comments');
 const replies = require('../../Interfaces/http/api/replies');
+const likes = require('../../Interfaces/http/api/likes');
 const authentications = require('../../Interfaces/http/api/authentications');
 
 const createServer = async (container) => {
@@ -51,6 +52,10 @@ const createServer = async (container) => {
     },
     {
       plugin: replies,
+      options: { container },
+    },
+    {
+      plugin: likes,
       options: { container },
     },
     {

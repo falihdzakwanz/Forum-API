@@ -17,21 +17,28 @@ describe('LikeRepositoryPostgres', () => {
     await pool.end();
   });
 
-  describe('setCommentLike function', () => {
+  describe('toggleCommentLike function', () => {
     it('should set the comment\'s likes correctly', async () => {
-      const userId = 'user-2342';
-      await UsersTableTestHelper.addUser({ id: userId, username: 'gundala' });
+      const userId = 'user-123';
+      await UsersTableTestHelper.addUser({ id: userId, username: 'jerkins' });
 
-      const threadId = 'thread-90152891';
-      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId });
+      const threadId = 'thread-123';
+      await ThreadsTableTestHelper.addThread({
+        id: threadId,
+        owner: userId,
+      });
 
-      const commentId = 'comment-6868321';
-      await CommentsTableTestHelper.addComment({ id: commentId, owner: userId, thread: threadId });
+      const commentId = 'comment-123';
+      await CommentsTableTestHelper.addComment({
+        id: commentId,
+        owner: userId,
+        thread: threadId,
+      });
 
       const fakeIdGenerator = () => '5445';
       const likeRepositoryPostgres = new LikeRepositoryPostgres(pool, fakeIdGenerator);
 
-      await likeRepositoryPostgres.setCommentLike(userId, commentId);
+      await likeRepositoryPostgres.toggleCommentLike(userId, commentId);
 
       const likes = await LikesTableTestHelper.findLikeById('like-5445');
       expect(likes).toHaveLength(1);
@@ -60,7 +67,7 @@ describe('LikeRepositoryPostgres', () => {
       const fakeIdGenerator = () => '9183';
       const likeRepositoryPostgres = new LikeRepositoryPostgres(pool, fakeIdGenerator);
 
-      await likeRepositoryPostgres.setCommentLikes(userId, commentId);
+      await likeRepositoryPostgres.toggleCommentLike(userId, commentId);
 
       const likes = await LikesTableTestHelper.findLikeById(likeId);
       expect(likes[0].is_liked).toEqual(false);
@@ -68,12 +75,15 @@ describe('LikeRepositoryPostgres', () => {
   });
 
   describe('countCommentLikes function', () => {
-    it('should count comment\'s likes correctly', async () => {
+    it('should count a single comment\'s likes correctly', async () => {
       const userId1 = 'user-2342';
       await UsersTableTestHelper.addUser({ id: userId1, username: 'gundala' });
 
       const userId2 = 'user-414';
       await UsersTableTestHelper.addUser({ id: userId2, username: 'garuda' });
+
+      const userId3 = 'user-400';
+      await UsersTableTestHelper.addUser({ id: userId3, username: 'jembronk' });
 
       const threadId = 'thread-90152891';
       await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId1 });
@@ -83,6 +93,9 @@ describe('LikeRepositoryPostgres', () => {
 
       const commentId2 = 'comment-90781';
       await CommentsTableTestHelper.addComment({ id: commentId2, owner: userId2, thread: threadId });
+
+      const commentId3 = 'comment-907811';
+      await CommentsTableTestHelper.addComment({ id: commentId3, owner: userId3, thread: threadId });
 
       await LikesTableTestHelper.addLike({
         id: 'like-134',
@@ -104,11 +117,13 @@ describe('LikeRepositoryPostgres', () => {
       const fakeIdGenerator = () => '5445';
       const likeRepositoryPostgres = new LikeRepositoryPostgres(pool, fakeIdGenerator);
 
-      const likes = await likeRepositoryPostgres.countCommentLikes([commentId1, commentId2]);
+      const likeCount1 = await likeRepositoryPostgres.countCommentLikes(commentId1);
+      const likeCount2 = await likeRepositoryPostgres.countCommentLikes(commentId2);
+      const likeCount3 = await likeRepositoryPostgres.countCommentLikes(commentId3);
 
-      expect(likes).toHaveLength(2);
-      expect(likes[0].count).toEqual(likes[0].comment === commentId1 ? 2 : 1);
-      expect(likes[1].count).toEqual(likes[1].comment === commentId2 ? 1 : 2);
+      expect(likeCount1).toEqual(2);
+      expect(likeCount2).toEqual(1);
+      expect(likeCount3).toEqual(0);
     });
   });
 });

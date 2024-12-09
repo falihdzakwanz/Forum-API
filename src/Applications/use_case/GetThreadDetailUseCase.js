@@ -7,10 +7,12 @@ class GetThreadDetailUseCase {
     threadRepository,
     commentRepository,
     replyRepository,
+    likeRepository,
   }) {
     this._threadRepository = threadRepository;
     this._commentRepository = commentRepository;
     this._replyRepository = replyRepository;
+    this._likeRepository = likeRepository;
   }
 
   async execute(useCaseParam) {
@@ -26,7 +28,7 @@ class GetThreadDetailUseCase {
     } = await this._threadRepository.getThreadById(threadId);
 
     const commentsByThreadId = await this._commentRepository.getCommentsByThreadId(threadId);
-    const comments = this.mapComments(commentsByThreadId);
+    const comments = await this.mapComments(commentsByThreadId);
 
     const repliesPromises = comments.map((comment) => this._replyRepository.getRepliesByCommentId(comment.id));
     const repliesResults = await Promise.all(repliesPromises);
@@ -50,19 +52,23 @@ class GetThreadDetailUseCase {
     });
   }
 
-  mapComments(comments) {
-    return comments.map(({
+  async mapComments(comments) {
+    return Promise.all(comments.map(async ({
       id: commentId,
       username: commentatorUsername,
       date,
       content,
       is_deleted,
-    }) => new CommentDetail({
-      id: commentId,
-      username: commentatorUsername,
-      date,
-      content: is_deleted ? '**komentar telah dihapus**' : content,
-      replies: [],
+    }) => {
+      const likeCount = await this._likeRepository.countCommentLikes(commentId);
+      return new CommentDetail({
+        id: commentId,
+        username: commentatorUsername,
+        date,
+        content: is_deleted ? '**komentar telah dihapus**' : content,
+        likeCount,
+        replies: [],
+      });
     }));
   }
 }
