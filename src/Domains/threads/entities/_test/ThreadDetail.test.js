@@ -37,6 +37,7 @@ describe('ThreadDetail entity', () => {
           username: 'thecommentator',
           date: '2021-08-08T08:55:09.775Z',
           content: 'some comment',
+          likeCount: 1,
           replies: [],
         },
       ],
@@ -61,6 +62,7 @@ describe('ThreadDetail entity', () => {
           username: 'thecommentator',
           date: '2021-08-08T08:55:09.775Z',
           content: 'some comment',
+          likeCount: 1,
           replies: [],
         }),
         new CommentDetail({
@@ -68,6 +70,7 @@ describe('ThreadDetail entity', () => {
           username: 'thecommentator',
           date: '2021-08-08T08:55:09.775Z',
           content: 'some comment',
+          likeCount: 2,
           replies: [],
         }),
       ],
