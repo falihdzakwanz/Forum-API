@@ -7,7 +7,7 @@ const NotFoundError = require('../../../Commons/exceptions/NotFoundError');
 describe('delete reply use case', () => {
   it('should orchestrate the delete reply action correctly', async () => {
     const useCaseAuth = {
-      id: 'user-928',
+      id: 'user-999',
     };
     const useCaseParam = {
       threadId: 'thread-123',
@@ -57,7 +57,7 @@ describe('delete reply use case', () => {
 
   it('should throw error if thread not found', async () => {
     const useCaseAuth = {
-      id: 'user-928',
+      id: 'user-999',
     };
     const useCaseParam = {
       threadId: 'thread-123',
@@ -88,7 +88,7 @@ describe('delete reply use case', () => {
 
   it('should throw error if comment not found', async () => {
     const useCaseAuth = {
-      id: 'user-928',
+      id: 'user-999',
     };
     const useCaseParam = {
       threadId: 'thread-123',

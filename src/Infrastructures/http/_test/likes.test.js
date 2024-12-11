@@ -18,9 +18,9 @@ describe('/threads/{threadId}/comments/{commentId}/likes endpoint', () => {
       method: 'POST',
       url: '/users',
       payload: {
-        username: 'lincoln',
+        username: 'Takumi',
         password: 'secret',
-        fullname: 'Dicoding Indonesia',
+        fullname: 'Fujiwara Takumi',
       },
     });
 
@@ -28,7 +28,7 @@ describe('/threads/{threadId}/comments/{commentId}/likes endpoint', () => {
       method: 'POST',
       url: '/authentications',
       payload: {
-        username: 'lincoln',
+        username: 'Takumi',
         password: 'secret',
       },
     });
@@ -40,8 +40,8 @@ describe('/threads/{threadId}/comments/{commentId}/likes endpoint', () => {
       method: 'POST',
       url: '/threads',
       payload: {
-        title: 'title test',
-        body: 'body test',
+        title: 'Initial D',
+        body: 'Takumi and Keisuke are good',
       },
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -54,7 +54,7 @@ describe('/threads/{threadId}/comments/{commentId}/likes endpoint', () => {
     const addCommentResponse = await server.inject({
       method: 'POST',
       url: `/threads/${threadId}/comments`,
-      payload: { content: 'comment now' },
+      payload: { content: 'This is comment about Takahasi Keisuke' },
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

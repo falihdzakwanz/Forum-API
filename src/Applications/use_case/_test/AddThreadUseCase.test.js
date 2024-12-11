@@ -5,8 +5,8 @@ const AddThreadUseCase = require('../AddThreadUseCase');
 describe('AddThreadUseCase', () => {
   it('should orchestrating the add thread action correctly', async () => {
     const useCasePayload = {
-      title: 'Thread Title',
-      body: 'Body of use case',
+      title: 'The theory of Fujiwara Bunta',
+      body: 'Fujiwara Bunta is The GOAT',
     };
     const useCaseAuth = {
       id: 'user-123',

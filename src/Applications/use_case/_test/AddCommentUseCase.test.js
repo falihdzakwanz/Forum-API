@@ -6,9 +6,8 @@ const ThreadRepository = require('../../../Domains/threads/ThreadRepository');
 
 describe('AddCommentUseCase', () => {
   it('should orchestrating the add comment action correctly', async () => {
-    // Arrange
     const useCasePayload = {
-      content: 'Try and error',
+      content: 'AddCommentUseCase',
     };
     const useCaseAuth = {
       id: 'user-123',
@@ -28,10 +27,8 @@ describe('AddCommentUseCase', () => {
       threadRepository: mockThreadRepository,
     });
 
-    // Act
     const comment = await addCommentUseCase.execute(useCasePayload, useCaseAuth, useCaseParam);
 
-    // Assert
     expect(mockThreadRepository.verifyAvailableThread).toBeCalledWith(useCaseParam.threadId);
     expect(mockCommentRepository.addComment).toBeCalledWith(expect.objectContaining({
       owner: useCaseAuth.id,

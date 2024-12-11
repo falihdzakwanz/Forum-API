@@ -10,39 +10,57 @@ const AuthorizationError = require('../../../Commons/exceptions/AuthorizationErr
 const NotFoundError = require('../../../Commons/exceptions/NotFoundError');
 
 describe('ReplyRepositoryPostgres', () => {
-  afterEach(async () => {
+  const userId = 'user-123';
+  const threadId = 'thread-8080';
+  const commentId = 'comment-909192';
+  const replyId = 'reply-951';
+
+  beforeAll(async () => {
+    await UsersTableTestHelper.addUser({ id: userId, username: 'John' });
+
+    await ThreadsTableTestHelper.addThread({
+      id: threadId,
+      owner: userId,
+      title: 'Taken 1',
+      body: 'I am gonna find you and i am gonna k*ll you',
+    });
+
+    await CommentsTableTestHelper.addComment({
+      id: commentId,
+      owner: userId,
+      thread: threadId,
+      content: 'This is comment test',
+    });
+  });
+
+  afterAll(async () => {
     await UsersTableTestHelper.cleanTable();
     await ThreadsTableTestHelper.cleanTable();
     await CommentsTableTestHelper.cleanTable();
     await RepliesTableTestHelper.cleanTable();
+    await pool.end();
   });
 
-  afterAll(async () => {
-    await pool.end();
+  beforeEach(async () => {
+    await RepliesTableTestHelper.cleanTable();
+    await RepliesTableTestHelper.addReply({
+      id: replyId,
+      comment: commentId,
+      owner: userId,
+      content: 'Conner reply',
+    });
+  });
+
+  afterEach(async () => {
+    await RepliesTableTestHelper.cleanTable();
   });
 
   describe('addReply function', () => {
     it('should persist the reply correctly', async () => {
-      const userId = 'user-123';
-      await UsersTableTestHelper.addUser({ id: userId, username: 'jerkins' });
-
-      const threadId = 'thread-123';
-      await ThreadsTableTestHelper.addThread({
-        id: threadId,
-        owner: userId,
-      });
-
-      const commentId = 'comment-123';
-      await CommentsTableTestHelper.addComment({
-        id: commentId,
-        owner: userId,
-        thread: threadId,
-      });
-
       const addReply = new AddReply({
         owner: userId,
         comment: commentId,
-        content: 'Reply content',
+        content: 'Reply by John Wick',
       });
 
       const fakeIdGenerator = () => '777';
@@ -55,38 +73,19 @@ describe('ReplyRepositoryPostgres', () => {
     });
 
     it('should return the reply correctly', async () => {
-      const userId = 'user-321';
-      await UsersTableTestHelper.addUser({
-        id: userId,
-        username: 'johnson',
-      });
-
-      const threadId = 'thread-444';
-      await ThreadsTableTestHelper.addThread({
-        id: threadId,
-        owner: userId,
-      });
-
-      const commentId = 'comment-555';
-      await CommentsTableTestHelper.addComment({
-        id: commentId,
-        owner: userId,
-        thread: threadId,
-      });
-
       const addReply = new AddReply({
         owner: userId,
         comment: commentId,
-        content: 'Reply content',
+        content: 'Reply by Takumi Fujiwara',
       });
 
-      const fakeIdGenerator = () => '777';
+      const fakeIdGenerator = () => '901';
       const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, fakeIdGenerator);
 
       const reply = await replyRepositoryPostgres.addReply(addReply);
 
       expect(reply).toStrictEqual(new AddedReply({
-        id: 'reply-777',
+        id: 'reply-901',
         owner: userId,
         content: addReply.content,
       }));
@@ -97,195 +96,61 @@ describe('ReplyRepositoryPostgres', () => {
     it('should throw NotFoundError when reply not available', async () => {
       const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
 
-      await expect(replyRepositoryPostgres.verifyAvailableReply('thread-99991', 'comment-001122', 'reply-1010101010101')).rejects.toThrowError(NotFoundError);
+      await expect(replyRepositoryPostgres.verifyAvailableReply(threadId, commentId, 'reply-1010101010101')).rejects.toThrowError(NotFoundError);
     });
 
     it('should not throw NotFoundError when reply available', async () => {
-      const userId = 'user-123';
-      await UsersTableTestHelper.addUser({
-        id: userId,
-        username: 'jerkins',
-      });
-
-      const threadId = 'thread-123';
-      await ThreadsTableTestHelper.addThread({
-        id: threadId,
-        owner: userId,
-      });
-
-      const commentId = 'comment-123';
-      await CommentsTableTestHelper.addComment({
-        id: commentId,
-        owner: userId,
-        thread: threadId,
-      });
-
-      const addReply = new AddReply({
-        owner: userId,
-        comment: commentId,
-        content: 'Reply content',
-      });
-
-      const fakeIdGenerator = () => '777';
-      const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, fakeIdGenerator);
-      replyRepositoryPostgres.addReply(addReply);
-      await expect(replyRepositoryPostgres.verifyAvailableReply(threadId, commentId, 'reply-777')).resolves.not.toThrowError(NotFoundError);
+      const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
+      await expect(replyRepositoryPostgres.verifyAvailableReply(threadId, commentId, replyId)).resolves.not.toThrowError(NotFoundError);
     });
   });
 
   describe('verifyReplyOwner function', () => {
     it('should throw AuthorizationError when user is not the reply\'s owner', async () => {
       const notOwnerId = 'user-110';
-      const ownerId = 'user-921';
-      await UsersTableTestHelper.addUser({ id: ownerId, username: 'jacob' });
-
-      const threadId = 'thread-931';
-      await ThreadsTableTestHelper.addThread({
-        id: threadId,
-        owner: ownerId,
-        title: 'Conner',
-        body: 'Conner body',
-      });
-
-      const commentId = 'comment-941';
-      await CommentsTableTestHelper.addComment({
-        id: commentId,
-        thread: threadId,
-        owner: ownerId,
-        content: 'Conner content',
-      });
-
-      const replyId = 'reply-951';
-      await RepliesTableTestHelper.addReply({
-        id: replyId,
-        comment: commentId,
-        owner: ownerId,
-        content: 'Conner reply',
-      });
 
       const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
       await expect(replyRepositoryPostgres.verifyReplyOwner(replyId, notOwnerId)).rejects.toThrowError(AuthorizationError);
     });
 
-    it('should throw NotFoundError when reply is not found', async () => {
-      const ownerId = 'user-999';
-      await UsersTableTestHelper.addUser({ id: ownerId, username: 'jacob' });
-
-      const threadId = 'thread-999';
-
-      const commentId = 'comment-999';
-
-      const replyId = 'reply-999';
-
-      const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
-      await expect(replyRepositoryPostgres.verifyAvailableReply(threadId, commentId, replyId)).rejects.toThrowError(NotFoundError);
-    });
-
     it('should not throw AuthorizationError when user is the comment\'s owner', async () => {
-      const ownerId = 'user-981';
-      await UsersTableTestHelper.addUser({
-        id: ownerId,
-        username: 'Hanses',
-      });
-
-      const threadId = 'thread-931';
-      await ThreadsTableTestHelper.addThread({
-        id: threadId,
-        owner: ownerId,
-        title: 'Conner',
-        body: 'Conner body',
-      });
-
-      const commentId = 'comment-941';
-      await CommentsTableTestHelper.addComment({
-        id: commentId,
-        thread: threadId,
-        owner: ownerId,
-        content: 'Conner content',
-      });
-
-      const replyId = 'reply-951';
-      await RepliesTableTestHelper.addReply({
-        id: replyId,
-        comment: commentId,
-        owner: ownerId,
-        content: 'Conner reply',
-      });
-
       const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
 
-      await expect(replyRepositoryPostgres.verifyReplyOwner(replyId, ownerId))
+      await expect(replyRepositoryPostgres.verifyReplyOwner(replyId, userId))
         .resolves.not.toThrowError(AuthorizationError);
     });
   });
 
   describe('deleteReply function', () => {
     it('should delete reply from database', async () => {
-      const ownerId = 'user-990';
-      await UsersTableTestHelper.addUser({ id: ownerId, username: 'jaredleno' });
-
-      const threadId = 'thread-880';
-      await ThreadsTableTestHelper.addThread({
-        id: threadId, owner: ownerId, title: 'The Man', body: 'The man body',
-      });
-
-      const commentId = 'comment-770';
-      await CommentsTableTestHelper.addComment({
-        id: commentId, thread: threadId, owner: ownerId, content: 'The man comment',
-      });
-
-      const replyId = 'reply-660';
-      await RepliesTableTestHelper.addReply({
-        id: replyId, comment: commentId, owner: ownerId, content: 'The man reply',
-      });
+      const repliesBeforeDelete = await RepliesTableTestHelper.findReplyById(replyId);
+      expect(repliesBeforeDelete[0].is_deleted).toStrictEqual(false);
 
       const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
       await replyRepositoryPostgres.deleteReplyById(replyId);
 
-      const replies = await RepliesTableTestHelper.findReplyById(replyId);
-      expect(replies[0].is_deleted).toStrictEqual(true);
-    });
-
-    it('should throw NotFoundError when the reply is not found', async () => {
-      const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
-
-      return expect(replyRepositoryPostgres.verifyAvailableReply('thread-123', 'comment-123', 'reply-caur'))
-        .rejects
-        .toThrowError(NotFoundError);
+      const repliesAfterDelete = await RepliesTableTestHelper.findReplyById(replyId);
+      expect(repliesAfterDelete[0].is_deleted).toStrictEqual(true);
     });
   });
 
   describe('getRepliesByCommentId function', () => {
     it('should get replies by commentId from database', async () => {
-      const owner = {
-        id: 'user-9909',
-        username: 'manwhocantbemoved',
-      };
-      await UsersTableTestHelper.addUser(owner);
-
-      const commentator1 = {
-        id: 'user-8808',
+      const replyUser1 = {
+        id: 'user-88089',
         username: 'tupac',
       };
-      await UsersTableTestHelper.addUser(commentator1);
+      await UsersTableTestHelper.addUser(replyUser1);
 
-      const commentator2 = {
-        id: 'user-7707',
+      const replyUser2 = {
+        id: 'user-77077',
         username: 'shakur',
       };
-      await UsersTableTestHelper.addUser(commentator2);
-
-      const threadId = 'thread-1101';
-      await ThreadsTableTestHelper.addThread({
-        id: threadId,
-        owner: owner.id,
-        title: 'All eyez on me',
-        body: 'Live life as a thug',
-      });
+      await UsersTableTestHelper.addUser(replyUser2);
 
       const comment = {
         id: 'comment-2202',
-        owner: owner.id,
+        owner: userId,
         thread: threadId,
         content: 'comment 1',
         createdAt: '2021-11-12T07:22:33.555Z',
@@ -296,8 +161,8 @@ describe('ReplyRepositoryPostgres', () => {
       const reply1 = {
         id: 'reply-3303',
         comment: comment.id,
-        owner: commentator1.id,
-        username: commentator1.username,
+        owner: replyUser1.id,
+        username: replyUser1.username,
         content: 'reply 1',
         created_at: '2021-11-12T07:23:08.555Z',
         is_deleted: false,
@@ -307,8 +172,8 @@ describe('ReplyRepositoryPostgres', () => {
       const reply2 = {
         id: 'reply-3304',
         comment: comment.id,
-        owner: commentator2.id,
-        username: commentator2.username,
+        owner: replyUser2.id,
+        username: replyUser2.username,
         content: 'balasan 2',
         created_at: '2021-08-08T08:45:33.555Z',
         is_deleted: true,

@@ -7,12 +7,10 @@ const LikeRepository = require('../../../Domains/likes/LikeRepository');
 
 describe('GetThreadDetailUseCase', () => {
   it('should orchestrate the get thread detail action correctly', async () => {
-    // Arrange
     const useCaseParam = {
       threadId: 'thread-123',
     };
 
-    // Mock minimal data from the repositories
     const mockThreadRepository = new ThreadRepository();
     const mockCommentRepository = new CommentRepository();
     const mockReplyRepository = new ReplyRepository();
@@ -87,10 +85,8 @@ describe('GetThreadDetailUseCase', () => {
       likeRepository: mockLikeRepository,
     });
 
-    // Act
     const threadDetail = await getThreadDetailUseCase.execute(useCaseParam);
 
-    // Assert
     expect(mockThreadRepository.verifyAvailableThread).toBeCalledWith(useCaseParam.threadId);
     expect(mockThreadRepository.getThreadById).toBeCalledWith(useCaseParam.threadId);
     expect(mockCommentRepository.getCommentsByThreadId).toBeCalledWith(useCaseParam.threadId);
@@ -141,7 +137,6 @@ describe('GetThreadDetailUseCase', () => {
   });
 
   it('should handle empty comments and replies correctly', async () => {
-    // Arrange
     const useCaseParam = {
       threadId: 'thread-123',
     };
@@ -171,10 +166,8 @@ describe('GetThreadDetailUseCase', () => {
       likeRepository: mockLikeRepository,
     });
 
-    // Act
     const threadDetail = await getThreadDetailUseCase.execute(useCaseParam);
 
-    // Assert
     expect(threadDetail).toMatchObject({
       id: 'thread-123',
       title: 'Thread Title',

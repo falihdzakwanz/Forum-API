@@ -1,10 +1,42 @@
 const pool = require('../../database/postgres/pool');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
+const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
 const container = require('../../container');
 const createServer = require('../createServer');
 
 describe('/threads endpoint', () => {
+  let server;
+  let accessToken;
+
+  beforeAll(async () => {
+    server = await createServer(container);
+
+    await server.inject({
+      method: 'POST',
+      url: '/users',
+      payload: {
+        username: 'John',
+        password: 'secret',
+        fullname: 'Jown Wick',
+      },
+    });
+
+    const loginResponse = await server.inject({
+      method: 'POST',
+      url: '/authentications',
+      payload: {
+        username: 'John',
+        password: 'secret',
+      },
+    });
+
+    const responseJson = JSON.parse(loginResponse.payload);
+    accessToken = responseJson.data.accessToken;
+  });
+
   afterAll(async () => {
+    await ThreadsTableTestHelper.cleanTable();
+    await UsersTableTestHelper.cleanTable();
     await pool.end();
   });
 
@@ -13,31 +45,10 @@ describe('/threads endpoint', () => {
   });
 
   describe('when POST /threads', () => {
-    it('should response 201 and persisted user', async () => {
-      const server = await createServer(container);
-      await server.inject({
-        method: 'POST',
-        url: '/users',
-        payload: {
-          username: 'asdasd',
-          password: 'secret',
-          fullname: 'Dicoding Indonesia',
-        },
-      });
-
-      const loginResponse = await server.inject({
-        method: 'POST',
-        url: '/authentications',
-        payload: {
-          username: 'asdasd',
-          password: 'secret',
-        },
-      });
-      const { data: { accessToken } } = JSON.parse(loginResponse.payload);
-
+    it('should response 201 and persisted thread', async () => {
       const requestPayload = {
-        title: 'title test',
-        body: 'body test',
+        title: 'Initial D Movie Legend',
+        body: 'About initial D movie legend',
       };
 
       const response = await server.inject({
@@ -56,29 +67,8 @@ describe('/threads endpoint', () => {
     });
 
     it('should response 400 when request payload not contain needed property', async () => {
-      const server = await createServer(container);
-      await server.inject({
-        method: 'POST',
-        url: '/users',
-        payload: {
-          username: 'mj23',
-          password: 'secret',
-          fullname: 'Dicoding Indonesia',
-        },
-      });
-
-      const loginResponse = await server.inject({
-        method: 'POST',
-        url: '/authentications',
-        payload: {
-          username: 'mj23',
-          password: 'secret',
-        },
-      });
-      const { data: { accessToken } } = JSON.parse(loginResponse.payload);
-
       const requestPayload = {
-        title: 'title test',
+        title: 'Initial D Movie Legend',
       };
 
       const response = await server.inject({
@@ -97,29 +87,8 @@ describe('/threads endpoint', () => {
     });
 
     it('should response 400 when request payload not meet data type specification', async () => {
-      const server = await createServer(container);
-      await server.inject({
-        method: 'POST',
-        url: '/users',
-        payload: {
-          username: 'auba',
-          password: 'secret',
-          fullname: 'Dicoding Indonesia',
-        },
-      });
-
-      const loginResponse = await server.inject({
-        method: 'POST',
-        url: '/authentications',
-        payload: {
-          username: 'auba',
-          password: 'secret',
-        },
-      });
-      const { data: { accessToken } } = JSON.parse(loginResponse.payload);
-
       const requestPayload = {
-        title: 'title test',
+        title: 'Initial D Movie Legend',
         body: { test: true },
       };
 
@@ -140,106 +109,43 @@ describe('/threads endpoint', () => {
   });
 
   describe('when GET /threads/{threadId}', () => {
-    it('should response 200 and return thread detail with its comments', async () => {
-      const server = await createServer(container);
+    let addedThread;
 
-      await server.inject({
-        method: 'POST',
-        url: '/users',
-        payload: {
-          username: 'wrsupratman',
-          password: 'secret',
-          fullname: 'Dicoding Indonesia',
-        },
-      });
-
-      const ownerLoginResponse = await server.inject({
-        method: 'POST',
-        url: '/authentications',
-        payload: {
-          username: 'wrsupratman',
-          password: 'secret',
-        },
-      });
-      const { data: { accessToken: ownerAccessToken } } = JSON.parse(ownerLoginResponse.payload);
-
-      const addedThreadResponse = await server.inject({
+    beforeAll(async () => {
+      const response = await server.inject({
         method: 'POST',
         url: '/threads',
         payload: {
-          title: 'title test',
-          body: 'body test',
+          title: 'Initial D Movie Legend',
+          body: 'About initial D movie legend',
         },
         headers: {
-          Authorization: `Bearer ${ownerAccessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
-      const { data: { addedThread } } = JSON.parse(addedThreadResponse.payload);
+
+      const responseJson = JSON.parse(response.payload);
+      addedThread = responseJson.data.addedThread;
 
       await server.inject({
         method: 'POST',
         url: `/threads/${addedThread.id}/comments`,
-        payload: { content: 'tes tes konten tes' },
+        payload: { content: 'This is comment about initial D' },
         headers: {
-          Authorization: `Bearer ${ownerAccessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
+    });
 
-      await server.inject({
-        method: 'POST',
-        url: '/users',
-        payload: {
-          username: 'halobang',
-          password: 'secret',
-          fullname: 'Dicoding Indonesia',
-        },
-      });
-
-      const otherLoginResponse = await server.inject({
-        method: 'POST',
-        url: '/authentications',
-        payload: {
-          username: 'halobang',
-          password: 'secret',
-        },
-      });
-
-      if (otherLoginResponse.statusCode !== 201) {
-        throw new Error('Other user login failed');
-      }
-
-      const { data: { accessToken: otherAccessToken } } = JSON.parse(otherLoginResponse.payload);
-
-      const addedCommentResponse = await server.inject({
-        method: 'POST',
-        url: `/threads/${addedThread.id}/comments`,
-        payload: { content: 'tes tes konten tes' },
-        headers: {
-          Authorization: `Bearer ${otherAccessToken}`,
-        },
-      });
-
-      const { data: { addedComment } } = JSON.parse(addedCommentResponse.payload);
-
-      const addedReplyResponse = await server.inject({
-        method: 'POST',
-        url: `/threads/${addedThread.id}/comments/${addedComment.id}/replies`,
-        payload: { content: 'tes tes konten tes' },
-        headers: {
-          Authorization: `Bearer ${otherAccessToken}`,
-        },
-      });
-      const { data: { addedReply } } = JSON.parse(addedReplyResponse.payload);
-
-      const threadsDetailResponse = await server.inject({
+    it('should response 200 and return thread detail with its comments', async () => {
+      const response = await server.inject({
         method: 'GET',
         url: `/threads/${addedThread.id}`,
       });
 
-      const responseJson = JSON.parse(threadsDetailResponse.payload);
-      expect(threadsDetailResponse.statusCode).toEqual(200);
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(200);
       expect(responseJson.status).toEqual('success');
-
       expect(responseJson.data.thread).toBeDefined();
     });
   });

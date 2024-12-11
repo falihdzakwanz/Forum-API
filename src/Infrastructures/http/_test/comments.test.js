@@ -1,10 +1,59 @@
 const pool = require('../../database/postgres/pool');
+const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
+const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
 const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
 const container = require('../../container');
 const createServer = require('../createServer');
 
-describe('/threads endpoint', () => {
+describe('/comments endpoint', () => {
+  let server;
+  let accessToken;
+  let thread;
+
+  beforeAll(async () => {
+    server = await createServer(container);
+
+    await server.inject({
+      method: 'POST',
+      url: '/users',
+      payload: {
+        username: 'John',
+        password: 'secret',
+        fullname: 'Jown Wick',
+      },
+    });
+
+    const loginResponse = await server.inject({
+      method: 'POST',
+      url: '/authentications',
+      payload: {
+        username: 'John',
+        password: 'secret',
+      },
+    });
+
+    const responseJson = JSON.parse(loginResponse.payload);
+    accessToken = responseJson.data.accessToken;
+
+    const addThreadResponse = await server.inject({
+      method: 'POST',
+      url: '/threads',
+      payload: {
+        title: 'John Wick Parabellum',
+        body: 'About john wick parabellum movie',
+      },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const addedThread = JSON.parse(addThreadResponse.payload);
+    thread = addedThread.data.addedThread;
+  });
+
   afterAll(async () => {
+    await UsersTableTestHelper.cleanTable();
+    await ThreadsTableTestHelper.cleanTable();
+    await CommentsTableTestHelper.cleanTable();
     await pool.end();
   });
 
@@ -14,47 +63,13 @@ describe('/threads endpoint', () => {
 
   describe('when POST /threads/{threadId}/comments', () => {
     it('should response 201 and persisted comment', async () => {
-      const server = await createServer(container);
-      await server.inject({
-        method: 'POST',
-        url: '/users',
-        payload: {
-          username: 'tesla',
-          password: 'secret',
-          fullname: 'Dicoding Indonesia',
-        },
-      });
-
-      const loginResponse = await server.inject({
-        method: 'POST',
-        url: '/authentications',
-        payload: {
-          username: 'tesla',
-          password: 'secret',
-        },
-      });
-      const { data: { accessToken } } = JSON.parse(loginResponse.payload);
-
-      const addThreadResponse = await server.inject({
-        method: 'POST',
-        url: '/threads',
-        payload: {
-          title: 'title test',
-          body: 'body test',
-        },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const { data: { addedThread } } = JSON.parse(addThreadResponse.payload);
-
       const requestPayload = {
-        content: 'tes tes konten tes',
+        content: 'This is comment about john wick parabellum',
       };
 
       const response = await server.inject({
         method: 'POST',
-        url: `/threads/${addedThread.id}/comments`,
+        url: `/threads/${thread.id}/comments`,
         payload: requestPayload,
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -68,45 +83,11 @@ describe('/threads endpoint', () => {
     });
 
     it('should response 400 when request payload not contain needed property', async () => {
-      const server = await createServer(container);
-      await server.inject({
-        method: 'POST',
-        url: '/users',
-        payload: {
-          username: 'lbj23',
-          password: 'secret',
-          fullname: 'Dicoding Indonesia',
-        },
-      });
-
-      const loginResponse = await server.inject({
-        method: 'POST',
-        url: '/authentications',
-        payload: {
-          username: 'lbj23',
-          password: 'secret',
-        },
-      });
-      const { data: { accessToken } } = JSON.parse(loginResponse.payload);
-
-      const addThreadResponse = await server.inject({
-        method: 'POST',
-        url: '/threads',
-        payload: {
-          title: 'title test',
-          body: 'body test',
-        },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const { data: { addedThread } } = JSON.parse(addThreadResponse.payload);
-
       const requestPayload = {};
 
       const response = await server.inject({
         method: 'POST',
-        url: `/threads/${addedThread.id}/comments`,
+        url: `/threads/${thread.id}/comments`,
         payload: requestPayload,
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -120,47 +101,13 @@ describe('/threads endpoint', () => {
     });
 
     it('should response 400 when request payload not meet data type specification', async () => {
-      const server = await createServer(container);
-      await server.inject({
-        method: 'POST',
-        url: '/users',
-        payload: {
-          username: 'torres',
-          password: 'secret',
-          fullname: 'Dicoding Indonesia',
-        },
-      });
-
-      const loginResponse = await server.inject({
-        method: 'POST',
-        url: '/authentications',
-        payload: {
-          username: 'torres',
-          password: 'secret',
-        },
-      });
-      const { data: { accessToken } } = JSON.parse(loginResponse.payload);
-
-      const addThreadResponse = await server.inject({
-        method: 'POST',
-        url: '/threads',
-        payload: {
-          title: 'title test',
-          body: 'body test',
-        },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const { data: { addedThread } } = JSON.parse(addThreadResponse.payload);
-
       const requestPayload = {
         content: 1234,
       };
 
       const response = await server.inject({
         method: 'POST',
-        url: `/threads/${addedThread.id}/comments`,
+        url: `/threads/${thread.id}/comments`,
         payload: requestPayload,
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -176,51 +123,20 @@ describe('/threads endpoint', () => {
 
   describe('when DELETE /threads/{threadId}/comments/{commentId}', () => {
     it('should response 200 if request correct', async () => {
-      const server = await createServer(container);
-      await server.inject({
-        method: 'POST',
-        url: '/users',
-        payload: {
-          username: 'jkrowling',
-          password: 'secret',
-          fullname: 'J.K Rowling',
-        },
-      });
-
-      const loginResponse = await server.inject({
-        method: 'POST',
-        url: '/authentications',
-        payload: {
-          username: 'jkrowling',
-          password: 'secret',
-        },
-      });
-      const { data: { accessToken } } = JSON.parse(loginResponse.payload);
-      const addThreadResponse = await server.inject({
-        method: 'POST',
-        url: '/threads',
-        payload: {
-          title: 'title test',
-          body: 'body test',
-        },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const { data: { addedThread } } = JSON.parse(addThreadResponse.payload);
       const addCommentResponse = await server.inject({
         method: 'POST',
-        url: `/threads/${addedThread.id}/comments`,
-        payload: { content: 'tes tes konten tes' },
+        url: `/threads/${thread.id}/comments`,
+        payload: { content: 'This is comment about john wick in paris' },
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      const { data: { addedComment } } = JSON.parse(addCommentResponse.payload);
+      const addedCommentResponse = JSON.parse(addCommentResponse.payload);
+      const { addedComment } = addedCommentResponse.data;
 
       const deleteCommentResponse = await server.inject({
         method: 'DELETE',
-        url: `/threads/${addedThread.id}/comments/${addedComment.id}`,
+        url: `/threads/${thread.id}/comments/${addedComment.id}`,
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -232,78 +148,41 @@ describe('/threads endpoint', () => {
     });
 
     it('should response 403 if user is not the comment\'s owner', async () => {
-      const server = await createServer(container);
-
-      // owner account
-      await server.inject({
-        method: 'POST',
-        url: '/users',
-        payload: {
-          username: 'vanrossum',
-          password: 'secret',
-          fullname: 'Guido Van Rossum',
-        },
-      });
-
-      const ownerloginResponse = await server.inject({
-        method: 'POST',
-        url: '/authentications',
-        payload: {
-          username: 'vanrossum',
-          password: 'secret',
-        },
-      });
-      const { data: { accessToken: ownerAccessToken } } = JSON.parse(ownerloginResponse.payload);
-
-      const addThreadResponse = await server.inject({
-        method: 'POST',
-        url: '/threads',
-        payload: {
-          title: 'title test',
-          body: 'body test',
-        },
-        headers: {
-          Authorization: `Bearer ${ownerAccessToken}`,
-        },
-      });
-      const { data: { addedThread } } = JSON.parse(addThreadResponse.payload);
-
       const addCommentResponse = await server.inject({
         method: 'POST',
-        url: `/threads/${addedThread.id}/comments`,
+        url: `/threads/${thread.id}/comments`,
         payload: { content: 'tes tes konten tes' },
         headers: {
-          Authorization: `Bearer ${ownerAccessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
-      const { data: { addedComment } } = JSON.parse(addCommentResponse.payload);
+      const addedCommentResponse = JSON.parse(addCommentResponse.payload);
+      const { addedComment } = addedCommentResponse.data;
 
-      // non-owner account
       await server.inject({
         method: 'POST',
         url: '/users',
         payload: {
-          username: 'alvaedison',
+          username: 'Rambo',
           password: 'secret',
-          fullname: 'Alva Edison',
+          fullname: 'John Rambo',
         },
       });
 
-      const nonOwnerloginResponse = await server.inject({
+      const nonOwnerLogin = await server.inject({
         method: 'POST',
         url: '/authentications',
         payload: {
-          username: 'alvaedison',
+          username: 'Rambo',
           password: 'secret',
         },
       });
-      const {
-        data: { accessToken: nonOwnerAccessToken },
-      } = JSON.parse(nonOwnerloginResponse.payload);
+      const nonOwnerLoginResponse = JSON.parse(nonOwnerLogin.payload);
+      const nonOwnerAccessToken = nonOwnerLoginResponse.data.accessToken;
 
       const deleteCommentResponse = await server.inject({
         method: 'DELETE',
-        url: `/threads/${addedThread.id}/comments/${addedComment.id}`,
+        url: `/threads/${thread.id}/comments/${addedComment.id}`,
         headers: {
           Authorization: `Bearer ${nonOwnerAccessToken}`,
         },
@@ -316,27 +195,6 @@ describe('/threads endpoint', () => {
     });
 
     it('should respond 404 if the thread not found', async () => {
-      const server = await createServer(container);
-      await server.inject({
-        method: 'POST',
-        url: '/users',
-        payload: {
-          username: 'brendaneich',
-          password: 'secret',
-          fullname: 'Brendan Eich',
-        },
-      });
-
-      const loginResponse = await server.inject({
-        method: 'POST',
-        url: '/authentications',
-        payload: {
-          username: 'brendaneich',
-          password: 'secret',
-        },
-      });
-      const { data: { accessToken } } = JSON.parse(loginResponse.payload);
-
       const deleteThreadResponse = await server.inject({
         method: 'DELETE',
         url: '/threads/random-id/comments/comment-random-id',
@@ -352,43 +210,9 @@ describe('/threads endpoint', () => {
     });
 
     it('should respond 404 if the comment not found', async () => {
-      const server = await createServer(container);
-      await server.inject({
-        method: 'POST',
-        url: '/users',
-        payload: {
-          username: 'brendaneich',
-          password: 'secret',
-          fullname: 'Brendan Eich',
-        },
-      });
-
-      const loginResponse = await server.inject({
-        method: 'POST',
-        url: '/authentications',
-        payload: {
-          username: 'brendaneich',
-          password: 'secret',
-        },
-      });
-      const { data: { accessToken } } = JSON.parse(loginResponse.payload);
-
-      const addThreadResponse = await server.inject({
-        method: 'POST',
-        url: '/threads',
-        payload: {
-          title: 'title test',
-          body: 'body test',
-        },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const { data: { addedThread } } = JSON.parse(addThreadResponse.payload);
-
       const deleteCommentResponse = await server.inject({
         method: 'DELETE',
-        url: `/threads/${addedThread.id}/comments/comment-random-id`,
+        url: `/threads/${thread.id}/comments/comment-random-id`,
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },

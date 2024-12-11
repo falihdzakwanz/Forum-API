@@ -7,15 +7,14 @@ const NotFoundError = require('../../../Commons/exceptions/NotFoundError');
 
 describe('AddReplyUseCase', () => {
   it('should orchestrating the add reply action correctly', async () => {
-    // Arrange
     const useCasePayload = {
-      content: 'Try and error',
+      content: 'AddReplyUseCase',
     };
     const useCaseAuth = {
-      id: 'user-345',
+      id: 'user-99999',
     };
     const useCaseParam = {
-      threadId: 'thread123',
+      threadId: 'thread-123',
       commentId: 'comment-123',
     };
 
@@ -33,10 +32,8 @@ describe('AddReplyUseCase', () => {
       threadRepository: mockThreadRepository,
     });
 
-    // Act
     const reply = await addReplyUseCase.execute(useCasePayload, useCaseAuth, useCaseParam);
 
-    // Assert
     expect(mockThreadRepository.verifyAvailableThread).toBeCalledWith(useCaseParam.threadId);
     expect(mockCommentRepository.verifyAvailableComment)
       .toBeCalledWith(useCaseParam.threadId, useCaseParam.commentId);
@@ -53,12 +50,11 @@ describe('AddReplyUseCase', () => {
   });
 
   it('should throw NotFoundError when thread id is not found', async () => {
-    // Arrange
     const useCasePayload = {
-      content: 'Try and error',
+      content: 'AddReplyUseCase',
     };
     const useCaseAuth = {
-      id: 'user-345',
+      id: 'user-99999',
     };
     const useCaseParam = {
       threadId: 'thread-999',
@@ -81,7 +77,6 @@ describe('AddReplyUseCase', () => {
       threadRepository: mockThreadRepository,
     });
 
-    // Act & Assert
     await expect(addReplyUseCase.execute(useCasePayload, useCaseAuth, useCaseParam))
       .rejects
       .toThrowError(NotFoundError);
@@ -92,12 +87,11 @@ describe('AddReplyUseCase', () => {
   });
 
   it('should throw NotFoundError when comment id is not found', async () => {
-    // Arrange
     const useCasePayload = {
-      content: 'Try and error',
+      content: 'AddReplyUseCase',
     };
     const useCaseAuth = {
-      id: 'user-345',
+      id: 'user-99999',
     };
     const useCaseParam = {
       threadId: 'thread-123',
@@ -120,7 +114,6 @@ describe('AddReplyUseCase', () => {
       threadRepository: mockThreadRepository,
     });
 
-    // Act & Assert
     await expect(addReplyUseCase.execute(useCasePayload, useCaseAuth, useCaseParam))
       .rejects
       .toThrowError(NotFoundError);

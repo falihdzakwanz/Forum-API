@@ -6,35 +6,41 @@ const LikesTableTestHelper = require('../../../../tests/LikesTableTestHelper');
 const LikeRepositoryPostgres = require('../LikeRepositoryPostgres');
 
 describe('LikeRepositoryPostgres', () => {
-  afterEach(async () => {
+  const userId = 'user-123';
+  const threadId = 'thread-8080';
+  const commentId = 'comment-909192';
+
+  beforeAll(async () => {
+    await UsersTableTestHelper.addUser({ id: userId, username: 'John' });
+
+    await ThreadsTableTestHelper.addThread({
+      id: threadId,
+      owner: userId,
+      title: 'Taken 1',
+      body: 'I am gonna find you and i am gonna k*ll you',
+    });
+
+    await CommentsTableTestHelper.addComment({ id: commentId, owner: userId, thread: threadId });
+  });
+
+  afterAll(async () => {
     await UsersTableTestHelper.cleanTable();
     await ThreadsTableTestHelper.cleanTable();
     await CommentsTableTestHelper.cleanTable();
     await LikesTableTestHelper.cleanTable();
+    await pool.end();
   });
 
-  afterAll(async () => {
-    await pool.end();
+  beforeEach(async () => {
+    await LikesTableTestHelper.cleanTable();
+  });
+
+  afterEach(async () => {
+    await LikesTableTestHelper.cleanTable();
   });
 
   describe('toggleCommentLike function', () => {
     it('should set the comment\'s likes correctly', async () => {
-      const userId = 'user-123';
-      await UsersTableTestHelper.addUser({ id: userId, username: 'jerkins' });
-
-      const threadId = 'thread-123';
-      await ThreadsTableTestHelper.addThread({
-        id: threadId,
-        owner: userId,
-      });
-
-      const commentId = 'comment-123';
-      await CommentsTableTestHelper.addComment({
-        id: commentId,
-        owner: userId,
-        thread: threadId,
-      });
-
       const fakeIdGenerator = () => '5445';
       const likeRepositoryPostgres = new LikeRepositoryPostgres(pool, fakeIdGenerator);
 
@@ -46,15 +52,6 @@ describe('LikeRepositoryPostgres', () => {
     });
 
     it('should update the existed comment\'s likes correctly', async () => {
-      const userId = 'user-2342';
-      await UsersTableTestHelper.addUser({ id: userId, username: 'gundala' });
-
-      const threadId = 'thread-90152891';
-      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId });
-
-      const commentId = 'comment-6868321';
-      await CommentsTableTestHelper.addComment({ id: commentId, owner: userId, thread: threadId });
-
       const likeId = 'like-9183';
 
       await LikesTableTestHelper.addLike({
@@ -76,26 +73,26 @@ describe('LikeRepositoryPostgres', () => {
 
   describe('countCommentLikes function', () => {
     it('should count a single comment\'s likes correctly', async () => {
-      const userId1 = 'user-2342';
-      await UsersTableTestHelper.addUser({ id: userId1, username: 'gundala' });
+      const userId1 = 'user-909';
+      await UsersTableTestHelper.addUser({ id: userId1, username: 'John Wick' });
 
-      const userId2 = 'user-414';
-      await UsersTableTestHelper.addUser({ id: userId2, username: 'garuda' });
+      const userId2 = 'user-212912';
+      await UsersTableTestHelper.addUser({ id: userId2, username: 'Fujiwara Takumi' });
 
-      const userId3 = 'user-400';
-      await UsersTableTestHelper.addUser({ id: userId3, username: 'jembronk' });
+      const userId3 = 'user-1290';
+      await UsersTableTestHelper.addUser({ id: userId3, username: 'Takahasi Keisuke' });
 
-      const threadId = 'thread-90152891';
-      await ThreadsTableTestHelper.addThread({ id: threadId, owner: userId1 });
+      const testThreadId = 'thread-90152891';
+      await ThreadsTableTestHelper.addThread({ id: testThreadId, owner: userId });
 
       const commentId1 = 'comment-6868321';
-      await CommentsTableTestHelper.addComment({ id: commentId1, owner: userId1, thread: threadId });
+      await CommentsTableTestHelper.addComment({ id: commentId1, owner: userId1, thread: testThreadId });
 
       const commentId2 = 'comment-90781';
-      await CommentsTableTestHelper.addComment({ id: commentId2, owner: userId2, thread: threadId });
+      await CommentsTableTestHelper.addComment({ id: commentId2, owner: userId2, thread: testThreadId });
 
       const commentId3 = 'comment-907811';
-      await CommentsTableTestHelper.addComment({ id: commentId3, owner: userId3, thread: threadId });
+      await CommentsTableTestHelper.addComment({ id: commentId3, owner: userId3, thread: testThreadId });
 
       await LikesTableTestHelper.addLike({
         id: 'like-134',
