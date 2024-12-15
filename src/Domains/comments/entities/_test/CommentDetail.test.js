@@ -10,7 +10,9 @@ describe('a CommentDetail entities', () => {
       replies: [],
     };
 
-    expect(() => new CommentDetail(payload)).toThrowError('COMMENT_DETAIL.NOT_CONTAIN_NEEDED_PROPERTY');
+    expect(() => new CommentDetail(payload)).toThrowError(
+      'COMMENT_DETAIL.NOT_CONTAIN_NEEDED_PROPERTY',
+    );
   });
 
   it('should throw error when payload did not meet data type specification', () => {
@@ -39,8 +41,55 @@ describe('a CommentDetail entities', () => {
       ],
     };
 
-    expect(() => new CommentDetail(payload)).toThrowError('COMMENT_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION');
-    expect(() => new CommentDetail(payload2)).toThrowError('COMMENT_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION');
+    expect(() => new CommentDetail(payload)).toThrowError(
+      'COMMENT_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION',
+    );
+    expect(() => new CommentDetail(payload2)).toThrowError(
+      'COMMENT_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION',
+    );
+  });
+
+  it('should throw error when replies contains non ReplyDetail instance', () => {
+    const payload = {
+      id: 'comment-_pby2_tmXV6bcvcdev8xk',
+      username: 'johndoe',
+      date: '2021-08-08T07:22:33.555Z',
+      content: 'sebuah comment',
+      likeCount: 1,
+      replies: [
+        {
+          id: 'reply-BErOXUSefjwWGW1Z10Ihk',
+          content: 'sebuah balasan 1',
+          date: '2021-08-08T07:59:48.766Z',
+          username: 'johndoe',
+        },
+      ],
+    };
+
+    expect(() => new CommentDetail(payload)).toThrowError(
+      'COMMENT_DETAIL.NOT_MEET_DATA_TYPE_SPECIFICATION',
+    );
+  });
+
+  it('should create CommentDetail object correctly when replies is an empty array', () => {
+    const payload = {
+      id: 'comment-_pby2_tmXV6bcvcdev8xk',
+      username: 'johndoe',
+      date: '2021-08-08T07:22:33.555Z',
+      content: 'sebuah comment',
+      likeCount: 2,
+      replies: [],
+    };
+
+    const {
+      id, username, content, date, likeCount, replies,
+    } = new CommentDetail(payload);
+    expect(id).toEqual(payload.id);
+    expect(username).toEqual(payload.username);
+    expect(content).toEqual(payload.content);
+    expect(date).toEqual(payload.date);
+    expect(likeCount).toEqual(payload.likeCount);
+    expect(replies).toHaveLength(0);
   });
 
   it('should create CommentDetail object correctly', () => {
@@ -67,12 +116,7 @@ describe('a CommentDetail entities', () => {
     };
 
     const {
-      id,
-      username,
-      content,
-      date,
-      likeCount,
-      replies,
+      id, username, content, date, likeCount, replies,
     } = new CommentDetail(payload);
 
     expect(id).toEqual(payload.id);
@@ -83,24 +127,20 @@ describe('a CommentDetail entities', () => {
     expect(replies).toEqual(payload.replies);
   });
 
-  it('should create CommentDetail object correctly when replies is an empty array', () => {
+  it('should create CommentDetail object correctly with default likeCount', () => {
     const payload = {
       id: 'comment-_pby2_tmXV6bcvcdev8xk',
       username: 'johndoe',
       date: '2021-08-08T07:22:33.555Z',
       content: 'sebuah comment',
-      likeCount: 2,
       replies: [],
     };
-
-    const {
-      id, username, content, date, likeCount, replies,
-    } = new CommentDetail(payload);
-    expect(id).toEqual(payload.id);
-    expect(username).toEqual(payload.username);
-    expect(content).toEqual(payload.content);
-    expect(date).toEqual(payload.date);
-    expect(likeCount).toEqual(payload.likeCount);
-    expect(replies).toHaveLength(0);
+    const commentDetail = new CommentDetail(payload);
+    expect(commentDetail.id).toEqual(payload.id);
+    expect(commentDetail.username).toEqual(payload.username);
+    expect(commentDetail.content).toEqual(payload.content);
+    expect(commentDetail.date).toEqual(payload.date);
+    expect(commentDetail.likeCount).toEqual(0);
+    expect(commentDetail.replies).toEqual(payload.replies);
   });
 });

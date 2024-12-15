@@ -6,6 +6,23 @@ const ReplyRepository = require('../../../Domains/replies/ReplyRepository');
 const LikeRepository = require('../../../Domains/likes/LikeRepository');
 
 describe('GetThreadDetailUseCase', () => {
+  it('should throw error when threadId is not provided', async () => {
+    const useCasePayload = {};
+    const mockThreadRepository = {};
+    const mockCommentRepository = {};
+    const mockReplyRepository = {};
+    const mockLikeRepository = {};
+    const getThreadDetailUseCase = new GetThreadDetailUseCase({
+      threadRepository: mockThreadRepository,
+      commentRepository: mockCommentRepository,
+      replyRepository: mockReplyRepository,
+      likeRepository: mockLikeRepository,
+    });
+    await expect(
+      getThreadDetailUseCase.execute(useCasePayload),
+    ).rejects.toThrowError('GET_THREAD_DETAIL_USE_CASE.NOT_CONTAIN_THREAD_ID');
+  });
+
   it('should orchestrate the get thread detail action correctly', async () => {
     const useCaseParam = {
       threadId: 'thread-123',
@@ -87,13 +104,27 @@ describe('GetThreadDetailUseCase', () => {
 
     const threadDetail = await getThreadDetailUseCase.execute(useCaseParam);
 
-    expect(mockThreadRepository.verifyAvailableThread).toBeCalledWith(useCaseParam.threadId);
-    expect(mockThreadRepository.getThreadById).toBeCalledWith(useCaseParam.threadId);
-    expect(mockCommentRepository.getCommentsByThreadId).toBeCalledWith(useCaseParam.threadId);
-    expect(mockReplyRepository.getRepliesByCommentId).toHaveBeenCalledWith('comment-1');
-    expect(mockReplyRepository.getRepliesByCommentId).toHaveBeenCalledWith('comment-2');
-    expect(mockLikeRepository.countCommentLikes).toHaveBeenCalledWith('comment-1');
-    expect(mockLikeRepository.countCommentLikes).toHaveBeenCalledWith('comment-2');
+    expect(mockThreadRepository.verifyAvailableThread).toBeCalledWith(
+      useCaseParam.threadId,
+    );
+    expect(mockThreadRepository.getThreadById).toBeCalledWith(
+      useCaseParam.threadId,
+    );
+    expect(mockCommentRepository.getCommentsByThreadId).toBeCalledWith(
+      useCaseParam.threadId,
+    );
+    expect(mockReplyRepository.getRepliesByCommentId).toHaveBeenCalledWith(
+      'comment-1',
+    );
+    expect(mockReplyRepository.getRepliesByCommentId).toHaveBeenCalledWith(
+      'comment-2',
+    );
+    expect(mockLikeRepository.countCommentLikes).toHaveBeenCalledWith(
+      'comment-1',
+    );
+    expect(mockLikeRepository.countCommentLikes).toHaveBeenCalledWith(
+      'comment-2',
+    );
 
     expect(threadDetail).toMatchObject({
       id: 'thread-123',

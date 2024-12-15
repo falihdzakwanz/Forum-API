@@ -16,11 +16,9 @@ class CommentDetail {
     this.replies = replies;
   }
 
-  _verifyPayload(payload) {
-    const {
-      id, username, date, content, likeCount = 0, replies,
-    } = payload;
-
+  _verifyPayload({
+    id, username, date, content, likeCount = 0, replies,
+  }) {
     if (!id || !username || !date || !content) {
       throw new Error('COMMENT_DETAIL.NOT_CONTAIN_NEEDED_PROPERTY');
     }
